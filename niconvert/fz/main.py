@@ -40,7 +40,7 @@ class Application(Ui_MainWindow):
                                  str(ex), QMessageBox.Ok)
 
     def txtAvTextChanged(self):
-        self.btnDownloadXml.setEnabled(len(self.txtAv.toPlainText()) > 0)
+        self.btnDownloadXml.setEnabled(len(self.txtAv.text()) > 0)
 
     def setEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(
