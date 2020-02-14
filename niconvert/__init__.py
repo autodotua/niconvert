@@ -5,3 +5,7 @@ def run_cli():
 def run_tk():
     from niconvert.fndtk.main import main
     main()
+
+def run_qt():
+    from fz.qt.main import main
+    main()
