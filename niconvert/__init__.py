@@ -7,5 +7,5 @@ def run_tk():
     main()
 
 def run_qt():
-    from fz.qt.main import main
+    from fz.main import main
     main()

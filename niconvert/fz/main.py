@@ -17,11 +17,17 @@ class Application(Ui_MainWindow):
         w.show()
         sys.exit(app.exec_())
 
-    def btnBrowseXmlClicked(self):
+    def openSaveFileDialog(self, txt, filter):
         path = QFileDialog.getSaveFileName(
-            self.MainWindow, "文件保存",  filter="所有文件 (*);;XML文件 (*.xml)")
-        if path is not None and len(path) > 0:
-            self.txtXml.setPlainText(path[0])
+            self.MainWindow, "文件保存",  filter=filter)
+        if path:
+            txt.setText(path[0])
+
+    def openOpenFileDialog(self, txt, filter):
+        path = QFileDialog.getOpenFileName(
+            self.MainWindow, "文件保存",  filter=filter)
+        if path:
+            txt.setText(path[0])
 
     def btnDownloadXmlClicked(self):
         d = Download()
@@ -37,7 +43,12 @@ class Application(Ui_MainWindow):
         self.btnDownloadXml.setEnabled(len(self.txtAv.toPlainText()) > 0)
 
     def setEvents(self):
-        self.btnBrowseXml.clicked.connect(self.btnBrowseXmlClicked)
+        self.btnBrowseXmlOutput.clicked.connect(
+            lambda state:  self.openSaveFileDialog(self.txtXmlOutput, "XML文件 (*.xml)"))
+        self.btnBrowseXmlInput.clicked.connect(
+            lambda state:  self.openOpenFileDialog(self.txtXmlInput, "XML文件 (*.xml)"))
+        self.btnBrowseAssOutput.clicked.connect(
+            lambda state:  self.openSaveFileDialog(self.txtAssOutput, "ASS文件 (*.ass)"))
         self.btnDownloadXml.clicked.connect(self.btnDownloadXmlClicked)
         self.txtAv.textChanged.connect(self.txtAvTextChanged)
 
