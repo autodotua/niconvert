@@ -2,11 +2,13 @@ import sys
 import os
 from io import StringIO
 from pathlib import Path
+from datetime import timedelta
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 from niconvert.fz.window import Ui_MainWindow
 from niconvert.fz.download import Download
 from niconvert.fndcli.main import convert
-from contextlib import contextmanager
+from niconvert.libsite.producer import Producer
 
 
 class Application(Ui_MainWindow):
@@ -16,6 +18,14 @@ class Application(Ui_MainWindow):
         self.setupUi(self.MainWindow)
         self.setupEvents()
         self.MainWindow.show()
+
+        model = QStandardItemModel()
+        model.setHorizontalHeaderLabels(["时间", "内容"])
+        self.tableView.setModel(model)
+
+        icon=QIcon()
+        icon.addPixmap(QPixmap("niconvert/fz/icon.ico"),QIcon.Normal,QIcon.Off)
+        self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
     def openSaveFileDialog(self, txt, filter):
@@ -33,9 +43,11 @@ class Application(Ui_MainWindow):
     def btnDownloadXmlClicked(self):
         d = Download()
         try:
-            d.download(self.txtAv.toPlainText(), self.txtXml.toPlainText)
+            cid = d.getCid(self.txtAv.text())
+            filePath = d.download(cid, self.txtDownloadOutput.text())
             QMessageBox.information(
                 self.MainWindow, "下载", "下载成功", QMessageBox.Ok)
+            self.txtConvertInput.setText(filePath)
         except Exception as ex:
             QMessageBox.critical(self.MainWindow, "下载", "下载失败：" +
                                  str(ex), QMessageBox.Ok)
@@ -58,13 +70,28 @@ class Application(Ui_MainWindow):
             filename = Path(xmlPath).stem+".ass"
             self.txtConvertOutput.setText(os.path.join(dir, filename))
 
+            self.loadDanmus(xmlPath)
+
+    def loadDanmus(self, path):
+        producer = Producer(self.getArgs()[0], path)
+        producer.start_handle()
+        index = 0
+        for danmu in producer.all_danmakus:
+            index += 1
+            model = self.tableView.model()
+            min = str(int(danmu.start/60))
+            sec = str(int(danmu.start % 60))
+            ms = str(int((danmu.start % 1)*100))
+            model.setItem(index, 0, QStandardItem(min+":"+sec+"."+ms))
+            model.setItem(index, 1, QStandardItem(danmu.content))
+        self.tableView.resizeColumnsToContents()
     def getArgs(self):
         '''
         0:{'input_filename': 'C:\\Users\\autod\\D...07087.xml',
          'output_filename': 'C:\\Users\\autod\\D...07087.ass'}
         1:{'bottom_filter': False, 'custom_filter': None, 'guest_filter': False, 'top_filter': False}
-        2:{'bottom_margin': 0, 'custom_offset': '00:00', 'drop_offset': 2, 
-        'font_name': '微软雅黑', 'font_size': 32, 'header_file': None, 
+        2:{'bottom_margin': 0, 'custom_offset': '00:00', 'drop_offset': 2,
+        'font_name': '微软雅黑', 'font_size': 32, 'header_file': None,
         'layout_algorithm': 'sync', 'line_count': 4, 'play_resolution': '1920x1080',
          'tune_duration': 0}
         '''
@@ -97,10 +124,14 @@ class Application(Ui_MainWindow):
         args = self.getArgs()
         r = redirect(lambda p: self.txtLog.append(p))
         self.txtLog.append("\n")
-        raw=sys.stdout 
+        raw = sys.stdout
         sys.stdout = r
-        convert(*args)
-        sys.stdout =raw
+        try:
+            convert(*args)
+        except Exception as ex:
+            QMessageBox.critical(self.MainWindow, "转换", "转换失败：" +
+                                 str(ex), QMessageBox.Ok)
+        sys.stdout = raw
 
     def setupEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(
@@ -127,6 +158,7 @@ class redirect:
 
     def flush(self):
         pass
+
 
 def main():
     app = Application()

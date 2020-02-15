@@ -6,8 +6,7 @@ headers = {
 
 
 class Download:
-    def download(self, url, filePath=None):
-        cid = self.get_cid(url)
+    def download(self, cid, filePath=None):
         if cid == "x":
             print("cid not found")
             exit(1)
@@ -21,8 +20,9 @@ class Download:
             filePath = cid + ".xml"
         with open(filePath, "wb+") as file:
             file.write(xml.encode("utf-8"))
+        return filePath
 
-    def get_cid(self, url):
+    def getCid(self, url):
         html = requests.get(url, headers=headers).content.decode('utf-8')
         if "cid" in html:
             return re.search(r'"cid":(\d*)', html).group(1)

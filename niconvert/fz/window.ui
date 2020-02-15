@@ -14,7 +14,7 @@
    <string>BiliBili弹幕下载&amp;转换</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_5">
+   <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="2,3">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0">
       <item>
@@ -317,7 +317,7 @@
               <number>5</number>
              </property>
              <property name="value">
-              <number>30</number>
+              <number>50</number>
              </property>
             </widget>
            </item>
@@ -362,7 +362,7 @@
               <number>10</number>
              </property>
              <property name="value">
-              <number>4</number>
+              <number>8</number>
              </property>
             </widget>
            </item>
@@ -500,16 +500,36 @@
      </layout>
     </item>
     <item>
-     <widget class="QGroupBox" name="groupBox_5">
-      <property name="title">
-       <string>日志</string>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QTextEdit" name="txtLog"/>
-       </item>
-      </layout>
-     </widget>
+     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="2,1">
+      <item>
+       <widget class="QGroupBox" name="groupBox_5">
+        <property name="title">
+         <string>弹幕</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QTableView" name="tableView">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_6">
+        <property name="title">
+         <string>日志</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QTextEdit" name="txtLog"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
