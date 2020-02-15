@@ -7,5 +7,5 @@ def run_tk():
     main()
 
 def run_qt():
-    from fz.main import main
+    from niconvert.fz.main import main
     main()

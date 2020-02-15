@@ -11,10 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>BiliBili弹幕下载&amp;转换</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout_5">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0">
       <item>
@@ -65,7 +65,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLineEdit" name="txtXmlOutput">
+            <widget class="QLineEdit" name="txtDownloadOutput">
              <property name="placeholderText">
               <string>自动</string>
              </property>
@@ -82,7 +82,11 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QLineEdit" name="txtAv"/>
+            <widget class="QLineEdit" name="txtAv">
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -108,7 +112,7 @@
             </widget>
            </item>
            <item row="1" column="2">
-            <widget class="QPushButton" name="btnBrowseAssOutput">
+            <widget class="QPushButton" name="btnBrowseConvertOutput">
              <property name="autoFillBackground">
               <bool>false</bool>
              </property>
@@ -125,7 +129,7 @@
             </widget>
            </item>
            <item row="2" column="2">
-            <widget class="QPushButton" name="btnAssOutput">
+            <widget class="QPushButton" name="btnConvert">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -141,17 +145,25 @@
             </widget>
            </item>
            <item row="0" column="2">
-            <widget class="QPushButton" name="btnBrowseXmlInput">
+            <widget class="QPushButton" name="btnBrowseConvertInput">
              <property name="text">
               <string>浏览..</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLineEdit" name="txtXmlInput"/>
+            <widget class="QLineEdit" name="txtConvertInput">
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLineEdit" name="txtAssOutput"/>
+            <widget class="QLineEdit" name="txtConvertOutput">
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -164,7 +176,7 @@
          <string>弹幕选项</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="0">
+         <item row="1" column="0">
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="2" column="0">
             <widget class="QLabel" name="label_5">
@@ -176,21 +188,21 @@
            <item row="2" column="1" colspan="2">
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
-              <widget class="QCheckBox" name="checkBox">
+              <widget class="QCheckBox" name="chkDisableTop">
                <property name="text">
                 <string>顶部弹幕</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_2">
+              <widget class="QCheckBox" name="chkDisableBottom">
                <property name="text">
                 <string>底部弹幕</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_3">
+              <widget class="QCheckBox" name="chkDisableGuest">
                <property name="text">
                 <string>游客弹幕</string>
                </property>
@@ -198,27 +210,20 @@
              </item>
             </layout>
            </item>
-           <item row="0" column="2" rowspan="2">
-            <widget class="QPushButton" name="btnBrowseFilter">
-             <property name="text">
-              <string>浏览..</string>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="0" rowspan="2">
             <widget class="QLabel" name="label_6">
              <property name="text">
-              <string>过滤规则：</string>
+              <string>过滤文件：</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QTextEdit" name="txtFilter">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+            <widget class="QLineEdit" name="txtFilter"/>
+           </item>
+           <item row="0" column="2">
+            <widget class="QPushButton" name="btnBrowseFilter">
+             <property name="text">
+              <string>浏览..</string>
              </property>
             </widget>
            </item>
@@ -235,27 +240,17 @@
         <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="0">
           <layout class="QGridLayout" name="gridLayout_7">
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_8">
+           <item row="6" column="2">
+            <widget class="QLabel" name="label_16">
              <property name="text">
-              <string>%</string>
+              <string>秒</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QSpinBox" name="txtFontSize">
-             <property name="maximum">
-              <number>200</number>
-             </property>
-             <property name="value">
-              <number>100</number>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_7">
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_12">
              <property name="text">
-              <string>字体大小：</string>
+              <string>布局算法：</string>
              </property>
             </widget>
            </item>
@@ -266,8 +261,223 @@
              </property>
             </widget>
            </item>
+           <item row="7" column="1">
+            <widget class="QSpinBox" name="txtMarginBottom"/>
+           </item>
+           <item row="6" column="1">
+            <widget class="QSpinBox" name="txtDropOffset">
+             <property name="maximum">
+              <number>10</number>
+             </property>
+             <property name="value">
+              <number>2</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>‰</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="2">
+            <widget class="QLabel" name="label_20">
+             <property name="text">
+              <string>秒</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>速度调整：</string>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="1">
-            <widget class="QFontComboBox" name="fontComboBox"/>
+            <widget class="QFontComboBox" name="cbbFont">
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+             <property name="currentText">
+              <string>微软雅黑</string>
+             </property>
+             <property name="currentIndex">
+              <number>411</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="txtFontSize">
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="singleStep">
+              <number>5</number>
+             </property>
+             <property name="value">
+              <number>30</number>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>丢弃偏移：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>最大行数：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="2">
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>%</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>底部留白：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>行</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="txtMaxLines">
+             <property name="maximum">
+              <number>10</number>
+             </property>
+             <property name="value">
+              <number>4</number>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QSpinBox" name="txtSpeedOffset">
+             <property name="minimum">
+              <number>-10</number>
+             </property>
+             <property name="maximum">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+             <item>
+              <widget class="QCheckBox" name="chkTimeOffsetNegetive">
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="txtTimeOffset"/>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>字体大小：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>时间偏移</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>秒</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QFrame" name="frame">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QRadioButton" name="rbtnSync">
+                <property name="text">
+                 <string>速度同步</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbtnAsync">
+                <property name="text">
+                 <string>速度异步</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>样式文件：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="QLineEdit" name="txtStyle">
+             <property name="placeholderText">
+              <string>默认</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="2">
+            <widget class="QPushButton" name="pushButton">
+             <property name="text">
+              <string>浏览..</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -290,7 +500,16 @@
      </layout>
     </item>
     <item>
-     <widget class="QTextEdit" name="textEdit"/>
+     <widget class="QGroupBox" name="groupBox_5">
+      <property name="title">
+       <string>日志</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QTextEdit" name="txtLog"/>
+       </item>
+      </layout>
+     </widget>
     </item>
    </layout>
   </widget>
