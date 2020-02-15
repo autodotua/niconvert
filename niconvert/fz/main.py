@@ -13,7 +13,7 @@ class Application(Ui_MainWindow):
         w.resize(250, 150)
         w.move(300, 300)
         self.setupUi(w)
-        self.setEvents()
+        self.setupEvents()
         w.show()
         sys.exit(app.exec_())
 
@@ -35,14 +35,14 @@ class Application(Ui_MainWindow):
             d.download(self.txtAv.toPlainText(), self.txtXml.toPlainText)
             QMessageBox.information(
                 self.MainWindow, "下载", "下载成功", QMessageBox.Ok)
-        except BaseException as ex:
+        except Exception as ex:
             QMessageBox.critical(self.MainWindow, "下载", "下载失败：" +
                                  str(ex), QMessageBox.Ok)
 
     def txtAvTextChanged(self):
         self.btnDownloadXml.setEnabled(len(self.txtAv.text()) > 0)
 
-    def setEvents(self):
+    def setupEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(
             lambda state:  self.openSaveFileDialog(self.txtXmlOutput, "XML文件 (*.xml)"))
         self.btnBrowseXmlInput.clicked.connect(
