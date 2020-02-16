@@ -23,8 +23,9 @@ class Application(Ui_MainWindow):
         model.setHorizontalHeaderLabels(["时间", "内容"])
         self.tableView.setModel(model)
 
-        icon=QIcon()
-        icon.addPixmap(QPixmap("niconvert/fz/icon.ico"),QIcon.Normal,QIcon.Off)
+        icon = QIcon()
+        icon.addPixmap(QPixmap("niconvert/fz/icon.ico"),
+                       QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
@@ -65,11 +66,10 @@ class Application(Ui_MainWindow):
         self.btnConvert.setEnabled(
             bool(xmlPath) and bool(self.txtConvertOutput.text()))
 
-        if(xmlPath):
+        if(xmlPath and os.path.isfile(xmlPath)):
             dir = os.path.dirname(xmlPath)
             filename = Path(xmlPath).stem+".ass"
             self.txtConvertOutput.setText(os.path.join(dir, filename))
-
             self.loadDanmus(xmlPath)
 
     def loadDanmus(self, path):
@@ -95,18 +95,18 @@ class Application(Ui_MainWindow):
         'layout_algorithm': 'sync', 'line_count': 4, 'play_resolution': '1920x1080',
          'tune_duration': 0}
         '''
-        ioArgs = {
+        ioArgs={
             "input_filename": self.txtConvertInput.text(),
             "output_filename": self.txtConvertOutput.text()
         }
-        danmuArgs = {
+        danmuArgs={
             'bottom_filter': self.chkDisableBottom.isChecked(),
             'custom_filter': None,
             'guest_filter': self.chkDisableGuest.isChecked(),
             'top_filter': self.chkDisableTop.isChecked()
         }
 
-        subtitleArgs = {
+        subtitleArgs={
             'bottom_margin': int(10.8*self.txtMarginBottom.value()),
             'custom_offset': ("0-" if self.chkTimeOffsetNegetive.isChecked() else "")+self.txtTimeOffset.text(),
             'drop_offset': self.txtDropOffset.value(),
@@ -121,17 +121,17 @@ class Application(Ui_MainWindow):
         return(ioArgs, danmuArgs, subtitleArgs)
 
     def convertButtonClicked(self):
-        args = self.getArgs()
-        r = redirect(lambda p: self.txtLog.append(p))
+        args=self.getArgs()
+        r=redirect(lambda p: self.txtLog.append(p))
         self.txtLog.append("\n")
-        raw = sys.stdout
-        sys.stdout = r
+        raw=sys.stdout
+        sys.stdout=r
         try:
             convert(*args)
         except Exception as ex:
             QMessageBox.critical(self.MainWindow, "转换", "转换失败：" +
                                  str(ex), QMessageBox.Ok)
-        sys.stdout = raw
+        sys.stdout=raw
 
     def setupEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(
@@ -151,7 +151,7 @@ class Application(Ui_MainWindow):
 
 class redirect:
     def __init__(self, writed):
-        self.writed = writed
+        self.writed=writed
 
     def write(self, str):
         self.writed(str)
@@ -161,7 +161,7 @@ class redirect:
 
 
 def main():
-    app = Application()
+    app=Application()
     app.show()
 
 

@@ -22,13 +22,18 @@ class Download:
             file.write(xml.encode("utf-8"))
         return filePath
 
-    def getCid(self, url):
-        html = requests.get(url, headers=headers).content.decode('utf-8')
-        if "cid" in html:
-            return re.search(r'"cid":(\d*)', html).group(1)
-        else:
-            return "x"
+    def getCid(self, urlOrAv):
+        html = self.getHtml(urlOrAv)
+        matches=re.findall(r'"cid":(\d+),"[dp]+',html)
+        return set(matches)
+        # if "cid" in html:
+        #     return re.search(r'"cid":(\d*)', html).group(1)
+        # else:
+        #     return "x"
 
+    def getHtml(self,urlOrAv):
+         html = requests.get(urlOrAv, headers=headers).content.decode('utf-8')
+         return html
     def format_time(self, time_raw):
         hour = str(int(time_raw / 3600))
         if hour != '0':
