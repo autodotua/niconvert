@@ -1,5 +1,7 @@
 import sys
 import os
+import threading
+import asyncio
 from io import StringIO
 from pathlib import Path
 from datetime import timedelta
@@ -22,12 +24,35 @@ class Application(Ui_MainWindow):
         model = QStandardItemModel()
         model.setHorizontalHeaderLabels(["时间", "内容"])
         self.tableView.setModel(model)
-
+        self.txtAv.setText('https://www.bilibili.com/video/av37719500?p=41')
         icon = QIcon()
         icon.addPixmap(QPixmap("niconvert/fz/icon.ico"),
                        QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
+
+    async   def download(self):
+        try:
+            info = d.getInfo(self.txtAv.text())
+        except Exception as ex:
+            QMessageBox.critical(self.MainWindow, "下载", "解析HTML失败" +
+                                 str(ex), QMessageBox.Ok)
+            return None
+        files = []
+        for page in info["pages"]:
+            try:
+                filePath = self.txtDownloadOutput.text()
+                if not bool(filePath):
+                    filePath = "[title] - [cid].xml"
+                filePath = filePath.replace("[title]", info["title"]).replace(
+                    "[cid]", page["cid"]).replace("[pagetitle]", page["title"])
+                d.download(page["cid"], filePath)
+                files.append(filePath)
+                print("下载成功："+filePath)
+            except Exception as ex:
+                print("下载失败："+page["cid"])
+                print(str(ex))
+        return files
 
     def openSaveFileDialog(self, txt, filter):
         path = QFileDialog.getSaveFileName(
@@ -41,17 +66,14 @@ class Application(Ui_MainWindow):
         if path:
             txt.setText(path[0])
 
-    def btnDownloadXmlClicked(self):
+    async def btnDownloadXmlClicked(self):
         d = Download()
-        try:
-            cid = d.getCid(self.txtAv.text())
-            filePath = d.download(cid, self.txtDownloadOutput.text())
-            QMessageBox.information(
-                self.MainWindow, "下载", "下载成功", QMessageBox.Ok)
-            self.txtConvertInput.setText(filePath)
-        except Exception as ex:
-            QMessageBox.critical(self.MainWindow, "下载", "下载失败：" +
-                                 str(ex), QMessageBox.Ok)
+        self.startRedirectPrint()
+
+        files =await self.download()
+
+        self.txtConvertInput.setText("|".join(files))
+        self.stopRedirectPrint()
 
     def txtAvTextChanged(self):
         self.btnDownloadXml.setEnabled(bool(self.txtAv.text()))
@@ -85,6 +107,7 @@ class Application(Ui_MainWindow):
             model.setItem(index, 0, QStandardItem(min+":"+sec+"."+ms))
             model.setItem(index, 1, QStandardItem(danmu.content))
         self.tableView.resizeColumnsToContents()
+
     def getArgs(self):
         '''
         0:{'input_filename': 'C:\\Users\\autod\\D...07087.xml',
@@ -95,18 +118,18 @@ class Application(Ui_MainWindow):
         'layout_algorithm': 'sync', 'line_count': 4, 'play_resolution': '1920x1080',
          'tune_duration': 0}
         '''
-        ioArgs={
+        ioArgs = {
             "input_filename": self.txtConvertInput.text(),
             "output_filename": self.txtConvertOutput.text()
         }
-        danmuArgs={
+        danmuArgs = {
             'bottom_filter': self.chkDisableBottom.isChecked(),
             'custom_filter': None,
             'guest_filter': self.chkDisableGuest.isChecked(),
             'top_filter': self.chkDisableTop.isChecked()
         }
 
-        subtitleArgs={
+        subtitleArgs = {
             'bottom_margin': int(10.8*self.txtMarginBottom.value()),
             'custom_offset': ("0-" if self.chkTimeOffsetNegetive.isChecked() else "")+self.txtTimeOffset.text(),
             'drop_offset': self.txtDropOffset.value(),
@@ -121,17 +144,23 @@ class Application(Ui_MainWindow):
         return(ioArgs, danmuArgs, subtitleArgs)
 
     def convertButtonClicked(self):
-        args=self.getArgs()
-        r=redirect(lambda p: self.txtLog.append(p))
-        self.txtLog.append("\n")
-        raw=sys.stdout
-        sys.stdout=r
+        args = self.getArgs()
+        self.startRedirectPrint()
         try:
             convert(*args)
         except Exception as ex:
             QMessageBox.critical(self.MainWindow, "转换", "转换失败：" +
                                  str(ex), QMessageBox.Ok)
-        sys.stdout=raw
+        self.stopRedirectPrint()
+
+    def stopRedirectPrint(self):
+        self.txtLog.append("\n")
+        sys.stdout = self.stdout
+
+    def startRedirectPrint(self):
+        r = Redirect(lambda p: self.txtLog.append(p))
+        self. stdout = sys.stdout
+        sys.stdout = r
 
     def setupEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(
@@ -142,16 +171,16 @@ class Application(Ui_MainWindow):
             lambda state:  self.openSaveFileDialog(self.txtConvertOutput, "ASS文件 (*.ass)"))
         self.btnBrowseFilter.clicked.connect(
             lambda state:  self.openOpenFileDialog(self.txtFilter, "文本文件 (*.txt)"))
-        self.btnDownloadXml.clicked.connect(self.btnDownloadXmlClicked)
+        self.btnDownloadXml.clicked.connect(lambda state: asyncio.create_task(self.btnDownloadXmlClicked))
         self.txtAv.textChanged.connect(self.txtAvTextChanged)
         self.txtConvertInput.textChanged.connect(self.txtXmlInputTextChanged)
         self.txtConvertOutput.textChanged.connect(self.txtAssOutputTextChanged)
         self.btnConvert.clicked.connect(self.convertButtonClicked)
 
 
-class redirect:
+class Redirect:
     def __init__(self, writed):
-        self.writed=writed
+        self.writed = writed
 
     def write(self, str):
         self.writed(str)
@@ -161,7 +190,7 @@ class redirect:
 
 
 def main():
-    app=Application()
+    app = Application()
     app.show()
 
 

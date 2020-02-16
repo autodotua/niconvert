@@ -6,26 +6,21 @@ headers = {
 
 
 class Download:
-    def download(self, cid, filePath=None):
-        if cid == "x":
-            print("cid not found")
-            exit(1)
-        print("cid is "+cid)
+    def download(self, cid, filePath):
+        if not bool(cid):
+            raise Exception("cid为空")
         danmu_url = "https://comment.bilibili.com/" + cid + ".xml"
         xml = requests.get(danmu_url, headers=headers).content.decode('utf-8')
-        # ass = generate_ass(danmu_list)
-        # with open(cid + ".ass", "wb+") as ass_file:
-        #     ass_file.write(ass.encode("utf-8"))
-        if filePath is None or len(filePath) == 0:
-            filePath = cid + ".xml"
+      
         with open(filePath, "wb+") as file:
             file.write(xml.encode("utf-8"))
         return filePath
 
-    def getCid(self, urlOrAv):
+    def getInfo(self, urlOrAv):
         html = self.getHtml(urlOrAv)
-        matches=re.findall(r'"cid":(\d+),"[dp]+',html)
-        return set(matches)
+        title=re.search(r'"title":"([^"]+)","pubdate',html)
+        pages=re.findall(r'"cid":(\d+),"page"[^\{]+"part":"([^"]+)"',html)
+        return {"title":title.group(1),"pages":list(map(lambda p: {"title":p[1],"cid":p[0]},pages))}
         # if "cid" in html:
         #     return re.search(r'"cid":(\d*)', html).group(1)
         # else:

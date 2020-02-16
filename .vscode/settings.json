@@ -3,5 +3,6 @@
         "--extension-pkg-whitelist=PyQt5"
     ],
     "qtForPython.path.designer": "C:\\Users\\autod\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\site-packages\\pyqt5_tools\\Qt\\bin\\designer.exe",
-    "qtForPython.path.pyuic": "pyuic5 -d -o ./niconvert/fz/window.py"
+    "qtForPython.path.pyuic": "pyuic5 -d -o ./niconvert/fz/window.py",
+    "python.pythonPath": "/usr/bin/python3.8"
 }
