@@ -65,17 +65,19 @@ class Application(Ui_MainWindow):
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
-    def openSaveFileDialog(self, txt, filter):
+    def btnBrowseXmlOutputClicked(self):
         path = QFileDialog.getSaveFileName(
-            self.MainWindow, "文件保存",  filter=filter)
+            self.MainWindow, "文件保存",  filter="XML文件 (*.xml)")[0]
         if path:
-            txt.setText(path[0])
+            if not path.endswith(".xml"):
+                path=path+".xml"
+            self.txtDownloadOutput.setText(path)
 
-    def openSelectFolderDialog(self, txt):
+    def btnBrowseConvertOutputClicked(self):
         path = QFileDialog.getExistingDirectory(
             self.MainWindow, "保存位置")
         if path:
-            txt.setText(path)
+            self.txtConvertOutput.setText(path)
 
     def openOpenFileDialog(self, txt, filter):
         path = QFileDialog.getOpenFileName(
@@ -180,12 +182,10 @@ class Application(Ui_MainWindow):
         sys.stdout = r
 
     def setupEvents(self):
-        self.btnBrowseXmlOutput.clicked.connect(
-            lambda state:  self.openSaveFileDialog(self.txtDownloadOutput, "XML文件 (*.xml)"))
+        self.btnBrowseXmlOutput.clicked.connect(self.btnBrowseXmlOutputClicked)
         self.btnBrowseConvertInput.clicked.connect(
             lambda state:  self.openOpenFileDialog(self.txtConvertInput, "XML文件 (*.xml);;json文件(*.json)"))
-        self.btnBrowseConvertOutput.clicked.connect(
-            lambda state:  self.openSelectFolderDialog(self.txtConvertOutput))
+        self.btnBrowseConvertOutput.clicked.connect(self.btnBrowseConvertOutputClicked)
         self.btnBrowseFilter.clicked.connect(
             lambda state:  self.openOpenFileDialog(self.txtFilter, "文本文件 (*.txt)"))
         self.btnDownloadXml.clicked.connect(self.btnDownloadXmlClicked)
