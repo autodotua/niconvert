@@ -7,10 +7,44 @@ from pathlib import Path
 from datetime import timedelta
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 from niconvert.fz.window import Ui_MainWindow
 from niconvert.fz.download import Download
 from niconvert.fndcli.main import convert
 from niconvert.libsite.producer import Producer
+
+
+class DownloadThread(QThread):
+    printSignal = pyqtSignal(str)
+
+    def __init__(self, av, filePath):
+        self.av = av
+        self.filePath = filePath
+        if not bool(self.filePath):
+            self. filePath = "[title] - [cid].xml"
+        super(DownloadThread, self).__init__()
+
+    def run(self):
+        d = Download()
+        try:
+            info = d.getInfo(self.av)
+            print(info)
+        except Exception as ex:
+            self.printSignal.emit("解析HTML失败")
+            self.printSignal.emit(str(ex))
+            return None
+        files = []
+        for page in info["pages"]:
+            try:
+                filePath = self. filePath.replace("[title]", info["title"]).replace(
+                    "[cid]", page["cid"]).replace("[pagetitle]", page["title"])
+                d.download(page["cid"], filePath)
+                files.append(filePath)
+                self .printSignal.emit("下载成功："+filePath)
+            except Exception as ex:
+                self.printSignal.emit("下载失败："+page["cid"])
+                self.printSignal.emit(str(ex))
+        self.files = files
 
 
 class Application(Ui_MainWindow):
@@ -31,29 +65,6 @@ class Application(Ui_MainWindow):
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
-    async   def download(self):
-        try:
-            info = d.getInfo(self.txtAv.text())
-        except Exception as ex:
-            QMessageBox.critical(self.MainWindow, "下载", "解析HTML失败" +
-                                 str(ex), QMessageBox.Ok)
-            return None
-        files = []
-        for page in info["pages"]:
-            try:
-                filePath = self.txtDownloadOutput.text()
-                if not bool(filePath):
-                    filePath = "[title] - [cid].xml"
-                filePath = filePath.replace("[title]", info["title"]).replace(
-                    "[cid]", page["cid"]).replace("[pagetitle]", page["title"])
-                d.download(page["cid"], filePath)
-                files.append(filePath)
-                print("下载成功："+filePath)
-            except Exception as ex:
-                print("下载失败："+page["cid"])
-                print(str(ex))
-        return files
-
     def openSaveFileDialog(self, txt, filter):
         path = QFileDialog.getSaveFileName(
             self.MainWindow, "文件保存",  filter=filter)
@@ -66,14 +77,15 @@ class Application(Ui_MainWindow):
         if path:
             txt.setText(path[0])
 
-    async def btnDownloadXmlClicked(self):
-        d = Download()
-        self.startRedirectPrint()
+    def btnDownloadXmlClicked(self):
 
-        files =await self.download()
+        self.t = DownloadThread(
+            self.txtAv.text(), self.txtDownloadOutput.text())
+        self.t.printSignal.connect(lambda p:  self.txtLog.append(p))
+        self. t.start()
 
-        self.txtConvertInput.setText("|".join(files))
-        self.stopRedirectPrint()
+        # self.txtConvertInput.setText("|".join(t.files))
+        # self.stopRedirectPrint()
 
     def txtAvTextChanged(self):
         self.btnDownloadXml.setEnabled(bool(self.txtAv.text()))
@@ -171,7 +183,7 @@ class Application(Ui_MainWindow):
             lambda state:  self.openSaveFileDialog(self.txtConvertOutput, "ASS文件 (*.ass)"))
         self.btnBrowseFilter.clicked.connect(
             lambda state:  self.openOpenFileDialog(self.txtFilter, "文本文件 (*.txt)"))
-        self.btnDownloadXml.clicked.connect(lambda state: asyncio.create_task(self.btnDownloadXmlClicked))
+        self.btnDownloadXml.clicked.connect(self.btnDownloadXmlClicked)
         self.txtAv.textChanged.connect(self.txtAvTextChanged)
         self.txtConvertInput.textChanged.connect(self.txtXmlInputTextChanged)
         self.txtConvertOutput.textChanged.connect(self.txtAssOutputTextChanged)
