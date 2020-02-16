@@ -32,7 +32,7 @@ class DownloadThread(QThread):
         except Exception as ex:
             self.printSignal.emit("解析HTML失败")
             self.printSignal.emit(str(ex))
-            return None
+            return
         files = []
         for page in info["pages"]:
             try:
@@ -71,19 +71,29 @@ class Application(Ui_MainWindow):
         if path:
             txt.setText(path[0])
 
+    def openSelectFolderDialog(self, txt):
+        path = QFileDialog.getExistingDirectory(
+            self.MainWindow, "保存位置")
+        if path:
+            txt.setText(path)
+
     def openOpenFileDialog(self, txt, filter):
         path = QFileDialog.getOpenFileName(
             self.MainWindow, "文件保存",  filter=filter)
         if path:
             txt.setText(path[0])
 
-    def btnDownloadXmlClicked(self):
+    def downloadFinished(self):
+        self.btnDownloadXml.setEnabled(True)
+        self.txtConvertInput.setText("|".join(self.t.files))
 
+    def btnDownloadXmlClicked(self):
         self.t = DownloadThread(
             self.txtAv.text(), self.txtDownloadOutput.text())
         self.t.printSignal.connect(lambda p:  self.txtLog.append(p))
+        self.t.finished.connect(self.downloadFinished)
+        self.btnDownloadXml.setEnabled(False)
         self. t.start()
-
         # self.txtConvertInput.setText("|".join(t.files))
         # self.stopRedirectPrint()
 
@@ -99,15 +109,17 @@ class Application(Ui_MainWindow):
         xmlPath = self.txtConvertInput.text()
         self.btnConvert.setEnabled(
             bool(xmlPath) and bool(self.txtConvertOutput.text()))
-
-        if(xmlPath and os.path.isfile(xmlPath)):
+        if "|" in xmlPath:
+            xmlPath = xmlPath.split("|")[0]
+        if xmlPath and os.path.isfile(xmlPath):
             dir = os.path.dirname(xmlPath)
-            filename = Path(xmlPath).stem+".ass"
-            self.txtConvertOutput.setText(os.path.join(dir, filename))
+            # filename=Path(xmlPath).stem+".ass"
+            #self.txtConvertOutput.setText(os.path.join(dir, filename))
+            self.txtConvertOutput.setText(os.path.abspath(dir))
             self.loadDanmus(xmlPath)
 
     def loadDanmus(self, path):
-        producer = Producer(self.getArgs()[0], path)
+        producer = Producer(self.getArgs(path)[0], path)
         producer.start_handle()
         index = 0
         for danmu in producer.all_danmakus:
@@ -120,19 +132,11 @@ class Application(Ui_MainWindow):
             model.setItem(index, 1, QStandardItem(danmu.content))
         self.tableView.resizeColumnsToContents()
 
-    def getArgs(self):
-        '''
-        0:{'input_filename': 'C:\\Users\\autod\\D...07087.xml',
-         'output_filename': 'C:\\Users\\autod\\D...07087.ass'}
-        1:{'bottom_filter': False, 'custom_filter': None, 'guest_filter': False, 'top_filter': False}
-        2:{'bottom_margin': 0, 'custom_offset': '00:00', 'drop_offset': 2,
-        'font_name': '微软雅黑', 'font_size': 32, 'header_file': None,
-        'layout_algorithm': 'sync', 'line_count': 4, 'play_resolution': '1920x1080',
-         'tune_duration': 0}
-        '''
+    def getArgs(self, path):
+        filename = Path(path).stem+".ass"
         ioArgs = {
-            "input_filename": self.txtConvertInput.text(),
-            "output_filename": self.txtConvertOutput.text()
+            "input_filename": path,
+            "output_filename": os.path.join(self.txtConvertOutput.text(), filename)
         }
         danmuArgs = {
             'bottom_filter': self.chkDisableBottom.isChecked(),
@@ -156,13 +160,14 @@ class Application(Ui_MainWindow):
         return(ioArgs, danmuArgs, subtitleArgs)
 
     def convertButtonClicked(self):
-        args = self.getArgs()
         self.startRedirectPrint()
-        try:
-            convert(*args)
-        except Exception as ex:
-            QMessageBox.critical(self.MainWindow, "转换", "转换失败：" +
-                                 str(ex), QMessageBox.Ok)
+        for path in self.txtConvertInput.text().split("|"):
+            args = self.getArgs(path)
+            try:
+                convert(*args)
+            except Exception as ex:
+                print("转换失败")
+                print(str(ex))
         self.stopRedirectPrint()
 
     def stopRedirectPrint(self):
@@ -180,7 +185,7 @@ class Application(Ui_MainWindow):
         self.btnBrowseConvertInput.clicked.connect(
             lambda state:  self.openOpenFileDialog(self.txtConvertInput, "XML文件 (*.xml);;json文件(*.json)"))
         self.btnBrowseConvertOutput.clicked.connect(
-            lambda state:  self.openSaveFileDialog(self.txtConvertOutput, "ASS文件 (*.ass)"))
+            lambda state:  self.openSelectFolderDialog(self.txtConvertOutput))
         self.btnBrowseFilter.clicked.connect(
             lambda state:  self.openOpenFileDialog(self.txtFilter, "文本文件 (*.txt)"))
         self.btnDownloadXml.clicked.connect(self.btnDownloadXmlClicked)
