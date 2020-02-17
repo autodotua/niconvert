@@ -17,11 +17,12 @@ from niconvert.libsite.producer import Producer
 class DownloadThread(QThread):
     printSignal = pyqtSignal(str)
 
-    def __init__(self, av, filePath):
+    def __init__(self, av, folder,fileNameFormat):
         self.av = av
-        self.filePath = filePath
-        if not bool(self.filePath):
-            self. filePath = "[title] - [cid].xml"
+        self.folder = folder
+        self.fileNameFormat=fileNameFormat
+        if not bool(self.fileNameFormat):
+            self. fileNameFormat = "[title] - [cid].xml"
         super(DownloadThread, self).__init__()
 
     def run(self):
@@ -36,7 +37,8 @@ class DownloadThread(QThread):
         files = []
         for page in info["pages"]:
             try:
-                filePath = self. filePath.replace("[title]", info["title"]).replace(
+                filePath=os.path.join(self.folder,self.fileNameFormat)
+                filePath =  filePath.replace("[title]", info["title"]).replace( 
                     "[cid]", page["cid"]).replace("[pagetitle]", page["title"])
                 d.download(page["cid"], filePath)
                 files.append(filePath)
@@ -48,16 +50,15 @@ class DownloadThread(QThread):
 
 
 class Application(Ui_MainWindow):
+    
     def show(self):
         app = QApplication(sys.argv)
         self.MainWindow = QMainWindow()
         self.setupUi(self.MainWindow)
+        self.setModels()
         self.setupEvents()
         self.MainWindow.show()
 
-        model = QStandardItemModel()
-        model.setHorizontalHeaderLabels(["时间", "内容"])
-        self.tableView.setModel(model)
         self.txtAv.setText('https://www.bilibili.com/video/av37719500?p=41')
         icon = QIcon()
         icon.addPixmap(QPixmap("niconvert/fz/icon.ico"),
@@ -65,12 +66,18 @@ class Application(Ui_MainWindow):
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
+    def setModels(self):
+        model = QStandardItemModel()
+        model.setHorizontalHeaderLabels(["时间", "内容"])
+        self.tableView.setModel(model)
+
+        model = QStringListModel()
+        self.lvwConvertInput.setModel(model)
+
     def btnBrowseXmlOutputClicked(self):
-        path = QFileDialog.getSaveFileName(
-            self.MainWindow, "文件保存",  filter="XML文件 (*.xml)")[0]
+        path = QFileDialog.getExistingDirectory(
+            self.MainWindow, "保存位置")
         if path:
-            if not path.endswith(".xml"):
-                path=path+".xml"
             self.txtDownloadOutput.setText(path)
 
     def btnBrowseConvertOutputClicked(self):
@@ -79,33 +86,38 @@ class Application(Ui_MainWindow):
         if path:
             self.txtConvertOutput.setText(path)
 
-    def openOpenFileDialog(self, txt, filter):
+    def btnBrowseConvertInputClicked(self):
+        paths = QFileDialog.getOpenFileNames(
+            self.MainWindow, "文件保存",  filter="XML文件 (*.xml);;json文件(*.json)")
+        if bool(paths[0]):
+            self.lvwConvertInput.model().setStringList(paths[0])
+            self.updateOutputAndButtonEnable()
+
+    def btnBrowseFilterClicked(self):
         path = QFileDialog.getOpenFileName(
-            self.MainWindow, "文件保存",  filter=filter)
+            self.MainWindow, "文件保存",  filter="文本文件 (*.txt)")
         if path:
-            txt.setText(path[0])
+            self.txtFilter.setText(path[0])
+            
 
     def downloadFinished(self):
         self.btnDownloadXml.setEnabled(True)
-        self.txtConvertInput.setText("|".join(self.t.files))
+        self.lvwConvertInput.model().setStringList(self.t.files)
+        self.updateOutputAndButtonEnable()
+        # self.txtConvertInput.setText("|".join(self.t.files))
 
     def btnDownloadXmlClicked(self):
         self.t = DownloadThread(
-            self.txtAv.text(), self.txtDownloadOutput.text())
+            self.txtAv.text(), self.txtDownloadOutput.text(),self.txtFormat.text())
         self.t.printSignal.connect(lambda p:  self.txtLog.append(p))
         self.t.finished.connect(self.downloadFinished)
         self.btnDownloadXml.setEnabled(False)
-        self. t.start()
+        self.t.start()
         # self.txtConvertInput.setText("|".join(t.files))
         # self.stopRedirectPrint()
 
     def txtAvTextChanged(self):
         self.btnDownloadXml.setEnabled(bool(self.txtAv.text()))
-
-    def txtAssOutputTextChanged(self):
-        xmlPath = self.txtConvertInput.text()
-        self.btnConvert.setEnabled(
-            bool(xmlPath) and bool(self.txtConvertOutput.text()))
 
     def txtXmlInputTextChanged(self):
         xmlPath = self.txtConvertInput.text()
@@ -119,6 +131,20 @@ class Application(Ui_MainWindow):
             #self.txtConvertOutput.setText(os.path.join(dir, filename))
             self.txtConvertOutput.setText(os.path.abspath(dir))
             self.loadDanmus(xmlPath)
+    def updateOutputAndButtonEnable(self):
+        buttonEnable=False
+        if self.lvwConvertInput.model().rowCount()>0:
+            path=self.lvwConvertInput.model().data(self.lvwConvertInput.model().index(0,0),Qt.DisplayRole)
+            dir = os.path.dirname(path)
+            self.txtConvertOutput.setText(os.path.abspath(dir))
+            
+            if bool(self.txtConvertOutput.text()):
+                buttonEnable=True
+
+        self.btnConvert.setEnabled(buttonEnable)
+    def lvwConvertInputSelectionChanged(self,index):
+        path=index.indexes()[0].data()
+        self.loadDanmus(path)
 
     def loadDanmus(self, path):
         producer = Producer(self.getArgs(path)[0], path)
@@ -163,7 +189,9 @@ class Application(Ui_MainWindow):
 
     def convertButtonClicked(self):
         self.startRedirectPrint()
-        for path in self.txtConvertInput.text().split("|"):
+        for row in range(self.lvwConvertInput.model().rowCount()):
+            path=self.lvwConvertInput.model().data(self.lvwConvertInput.model().index(row,0),Qt.DisplayRole)
+
             args = self.getArgs(path)
             try:
                 convert(*args)
@@ -183,17 +211,14 @@ class Application(Ui_MainWindow):
 
     def setupEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(self.btnBrowseXmlOutputClicked)
-        self.btnBrowseConvertInput.clicked.connect(
-            lambda state:  self.openOpenFileDialog(self.txtConvertInput, "XML文件 (*.xml);;json文件(*.json)"))
+        self.btnBrowseConvertInput.clicked.connect(self.btnBrowseConvertInputClicked)
         self.btnBrowseConvertOutput.clicked.connect(self.btnBrowseConvertOutputClicked)
-        self.btnBrowseFilter.clicked.connect(
-            lambda state:  self.openOpenFileDialog(self.txtFilter, "文本文件 (*.txt)"))
+        self.btnBrowseFilter.clicked.connect(self.btnBrowseFilterClicked)
         self.btnDownloadXml.clicked.connect(self.btnDownloadXmlClicked)
         self.txtAv.textChanged.connect(self.txtAvTextChanged)
-        self.txtConvertInput.textChanged.connect(self.txtXmlInputTextChanged)
-        self.txtConvertOutput.textChanged.connect(self.txtAssOutputTextChanged)
+        self.txtConvertOutput.textChanged.connect(self.updateOutputAndButtonEnable)
         self.btnConvert.clicked.connect(self.convertButtonClicked)
-
+        self.lvwConvertInput.selectionModel().selectionChanged.connect(self.lvwConvertInputSelectionChanged)
 
 class Redirect:
     def __init__(self, writed):
