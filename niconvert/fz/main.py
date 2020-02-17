@@ -1,5 +1,7 @@
 import sys
 import os
+import platform
+import subprocess
 import threading
 import asyncio
 from io import StringIO
@@ -186,7 +188,16 @@ class Application(Ui_MainWindow):
             'tune_duration': self.txtSpeedOffset.value()
         }
         return(ioArgs, danmuArgs, subtitleArgs)
-
+    def btnOpenFolderClicked(self):
+        if  self.txtConvertOutput.text():
+            self.openFile(self.txtConvertOutput.text())
+    def openFile(self,path):
+        if platform.system() == "Windows":
+            os.startfile(path)
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
     def convertButtonClicked(self):
         self.startRedirectPrint()
         for row in range(self.lvwConvertInput.model().rowCount()):
@@ -219,7 +230,7 @@ class Application(Ui_MainWindow):
         self.txtConvertOutput.textChanged.connect(self.updateOutputAndButtonEnable)
         self.btnConvert.clicked.connect(self.convertButtonClicked)
         self.lvwConvertInput.selectionModel().selectionChanged.connect(self.lvwConvertInputSelectionChanged)
-
+        self.btnOpenFolder.clicked.connect(self.btnOpenFolderClicked)
 class Redirect:
     def __init__(self, writed):
         self.writed = writed
