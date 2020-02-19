@@ -19,10 +19,10 @@ from niconvert.libsite.producer import Producer
 class DownloadThread(QThread):
     printSignal = pyqtSignal(str)
 
-    def __init__(self, av, folder,fileNameFormat):
+    def __init__(self, av, folder, fileNameFormat):
         self.av = av
         self.folder = folder
-        self.fileNameFormat=fileNameFormat
+        self.fileNameFormat = fileNameFormat
         if not bool(self.fileNameFormat):
             self. fileNameFormat = "[title] - [cid].xml"
         super(DownloadThread, self).__init__()
@@ -39,8 +39,8 @@ class DownloadThread(QThread):
         files = []
         for page in info["pages"]:
             try:
-                filePath=os.path.join(self.folder,self.fileNameFormat)
-                filePath =  filePath.replace("[title]", info["title"]).replace( 
+                filePath = os.path.join(self.folder, self.fileNameFormat)
+                filePath = filePath.replace("[title]", info["title"]).replace(
                     "[cid]", page["cid"]).replace("[pagetitle]", page["title"])
                 d.download(page["cid"], filePath)
                 files.append(filePath)
@@ -52,13 +52,18 @@ class DownloadThread(QThread):
 
 
 class Application(Ui_MainWindow):
-    
+    def __init__(self):
+        QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+        pass
+
     def show(self):
         app = QApplication(sys.argv)
         self.MainWindow = QMainWindow()
         self.setupUi(self.MainWindow)
         self.setModels()
         self.setupEvents()
+        if platform.system() == "Windows":
+            app.setFont(QFont("Microsoft Yahei UI",9))
         self.MainWindow.show()
 
         self.txtAv.setText('https://www.bilibili.com/video/av37719500?p=41')
@@ -100,7 +105,6 @@ class Application(Ui_MainWindow):
             self.MainWindow, "文件保存",  filter="文本文件 (*.txt)")
         if path:
             self.txtFilter.setText(path[0])
-            
 
     def downloadFinished(self):
         self.btnDownloadXml.setEnabled(True)
@@ -110,7 +114,7 @@ class Application(Ui_MainWindow):
 
     def btnDownloadXmlClicked(self):
         self.t = DownloadThread(
-            self.txtAv.text(), self.txtDownloadOutput.text(),self.txtFormat.text())
+            self.txtAv.text(), self.txtDownloadOutput.text(), self.txtFormat.text())
         self.t.printSignal.connect(lambda p:  self.txtLog.append(p))
         self.t.finished.connect(self.downloadFinished)
         self.btnDownloadXml.setEnabled(False)
@@ -133,19 +137,22 @@ class Application(Ui_MainWindow):
             #self.txtConvertOutput.setText(os.path.join(dir, filename))
             self.txtConvertOutput.setText(os.path.abspath(dir))
             self.loadDanmus(xmlPath)
+
     def updateOutputAndButtonEnable(self):
-        buttonEnable=False
-        if self.lvwConvertInput.model().rowCount()>0:
-            path=self.lvwConvertInput.model().data(self.lvwConvertInput.model().index(0,0),Qt.DisplayRole)
+        buttonEnable = False
+        if self.lvwConvertInput.model().rowCount() > 0:
+            path = self.lvwConvertInput.model().data(
+                self.lvwConvertInput.model().index(0, 0), Qt.DisplayRole)
             dir = os.path.dirname(path)
             self.txtConvertOutput.setText(os.path.abspath(dir))
-            
+
             if bool(self.txtConvertOutput.text()):
-                buttonEnable=True
+                buttonEnable = True
 
         self.btnConvert.setEnabled(buttonEnable)
-    def lvwConvertInputSelectionChanged(self,index):
-        path=index.indexes()[0].data()
+
+    def lvwConvertInputSelectionChanged(self, index):
+        path = index.indexes()[0].data()
         self.loadDanmus(path)
 
     def loadDanmus(self, path):
@@ -188,20 +195,24 @@ class Application(Ui_MainWindow):
             'tune_duration': self.txtSpeedOffset.value()
         }
         return(ioArgs, danmuArgs, subtitleArgs)
+
     def btnOpenFolderClicked(self):
-        if  self.txtConvertOutput.text():
+        if self.txtConvertOutput.text():
             self.openFile(self.txtConvertOutput.text())
-    def openFile(self,path):
+
+    def openFile(self, path):
         if platform.system() == "Windows":
             os.startfile(path)
         elif platform.system() == "Darwin":
             subprocess.Popen(["open", path])
         else:
             subprocess.Popen(["xdg-open", path])
+
     def convertButtonClicked(self):
         self.startRedirectPrint()
         for row in range(self.lvwConvertInput.model().rowCount()):
-            path=self.lvwConvertInput.model().data(self.lvwConvertInput.model().index(row,0),Qt.DisplayRole)
+            path = self.lvwConvertInput.model().data(
+                self.lvwConvertInput.model().index(row, 0), Qt.DisplayRole)
 
             args = self.getArgs(path)
             try:
@@ -222,15 +233,21 @@ class Application(Ui_MainWindow):
 
     def setupEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(self.btnBrowseXmlOutputClicked)
-        self.btnBrowseConvertInput.clicked.connect(self.btnBrowseConvertInputClicked)
-        self.btnBrowseConvertOutput.clicked.connect(self.btnBrowseConvertOutputClicked)
+        self.btnBrowseConvertInput.clicked.connect(
+            self.btnBrowseConvertInputClicked)
+        self.btnBrowseConvertOutput.clicked.connect(
+            self.btnBrowseConvertOutputClicked)
         self.btnBrowseFilter.clicked.connect(self.btnBrowseFilterClicked)
         self.btnDownloadXml.clicked.connect(self.btnDownloadXmlClicked)
         self.txtAv.textChanged.connect(self.txtAvTextChanged)
-        self.txtConvertOutput.textChanged.connect(self.updateOutputAndButtonEnable)
+        self.txtConvertOutput.textChanged.connect(
+            self.updateOutputAndButtonEnable)
         self.btnConvert.clicked.connect(self.convertButtonClicked)
-        self.lvwConvertInput.selectionModel().selectionChanged.connect(self.lvwConvertInputSelectionChanged)
+        self.lvwConvertInput.selectionModel().selectionChanged.connect(
+            self.lvwConvertInputSelectionChanged)
         self.btnOpenFolder.clicked.connect(self.btnOpenFolderClicked)
+
+
 class Redirect:
     def __init__(self, writed):
         self.writed = writed
