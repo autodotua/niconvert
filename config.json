@@ -1,0 +1,1 @@
+{"normal": {"title": "\"title\":\"([^\"]+)\",\"pubdate", "pages": "\"cid\":(\\d+),\"page\"[^\\{]+\"part\":\"([^\"]+)\""}, "movie": {"title": "\"ssId\":[0-9]+,\"title\":\"([^\"]+)\"", "pages": "\"cid\":(\\d+),[^\\{]+\"title\":\"([^\"]+)\""}, "custom": {"title": "", "pages": ""}, "format": "[title] - [cid] - [pagetitle].xml"}
