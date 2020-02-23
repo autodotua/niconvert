@@ -21,7 +21,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setFrameShadow(QtWidgets.QFrame.Raised)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 509, 880))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, -200, 509, 950))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
