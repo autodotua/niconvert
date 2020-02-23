@@ -93,6 +93,3 @@ class DownloadThread(QThread):
         self.files = files
 
 
-if __name__ == "__main__":
-    download = Download()
-    download.download("https://www.bilibili.com/video/av88761848")
