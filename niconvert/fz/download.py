@@ -20,7 +20,12 @@ class Download:
         html = self.getHtml(urlOrAv)
         title=re.search(r'"title":"([^"]+)","pubdate',html)
         pages=re.findall(r'"cid":(\d+),"page"[^\{]+"part":"([^"]+)"',html)
-        return {"title":title.group(1),"pages":list(map(lambda p: {"title":p[1],"cid":p[0]},pages))}
+        if len(pages)==0:
+            print("page is None")
+            pages=[re.findall(r'"cid":(\d+),[^\{]+"title":"([^"]+)"',html)[0]]
+        
+        #print("page is"+pages)
+        return {"title":None if title is None else title.group(1),"pages":list(map(lambda p: {"title":p[1],"cid":p[0]},pages))}
         # if "cid" in html:
         #     return re.search(r'"cid":(\d*)', html).group(1)
         # else:
