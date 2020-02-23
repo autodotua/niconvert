@@ -14,46 +14,14 @@ from niconvert.fz.window import Ui_MainWindow
 from niconvert.fz.download import Download
 from niconvert.fndcli.main import convert
 from niconvert.libsite.producer import Producer
-
-
-class DownloadThread(QThread):
-    printSignal = pyqtSignal(str)
-
-    def __init__(self, av, folder, fileNameFormat):
-        self.av = av
-        self.folder = folder
-        self.fileNameFormat = fileNameFormat
-        if not bool(self.fileNameFormat):
-            self. fileNameFormat = "[title] - [cid].xml"
-        super(DownloadThread, self).__init__()
-
-    def run(self):
-        d = Download()
-        try:
-            info = d.getInfo(self.av)
-            print(info)
-        except Exception as ex:
-            self.printSignal.emit("解析HTML失败")
-            self.printSignal.emit(str(ex))
-            return
-        files = []
-        for page in info["pages"]:
-            try:
-                filePath = os.path.join(self.folder, self.fileNameFormat)
-                filePath = filePath.replace("[title]", info["title"]).replace(
-                    "[cid]", page["cid"]).replace("[pagetitle]", page["title"])
-                d.download(page["cid"], filePath)
-                files.append(filePath)
-                self .printSignal.emit("下载成功："+filePath)
-            except Exception as ex:
-                self.printSignal.emit("下载失败："+page["cid"])
-                self.printSignal.emit(str(ex))
-        self.files = files
+from niconvert.fz.download import DownloadThread
+from niconvert.fz.config import Config
 
 
 class Application(Ui_MainWindow):
     def __init__(self):
         QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+        self.config = Config.get()
         pass
 
     def show(self):
@@ -63,15 +31,20 @@ class Application(Ui_MainWindow):
         self.setModels()
         self.setupEvents()
         if platform.system() == "Windows":
-            app.setFont(QFont("Microsoft Yahei UI",9))
+            app.setFont(QFont("Microsoft Yahei UI", 9))
+        self.initUIValues()
         self.MainWindow.show()
 
-        self.txtAv.setText('https://www.bilibili.com/video/av37719500?p=41')
+        self.txtAv.setText('https://www.bilibili.com/bangumi/play/ep280975')
         icon = QIcon()
         icon.addPixmap(QPixmap("niconvert/fz/icon.ico"),
                        QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
+
+    def initUIValues(self):
+        self.txtFormat.setText(self.config["format"])
+        self.downloadTypeChanged()
 
     def setModels(self):
         model = QStandardItemModel()
@@ -114,7 +87,8 @@ class Application(Ui_MainWindow):
 
     def btnDownloadXmlClicked(self):
         self.t = DownloadThread(
-            self.txtAv.text(), self.txtDownloadOutput.text(), self.txtFormat.text())
+            self.txtAv.text(), self.txtDownloadOutput.text(), self.txtFormat.text(),
+            self.txtRTitle.text(), self.txtRPages.text())
         self.t.printSignal.connect(lambda p:  self.txtLog.append(p))
         self.t.finished.connect(self.downloadFinished)
         self.btnDownloadXml.setEnabled(False)
@@ -231,6 +205,39 @@ class Application(Ui_MainWindow):
         self. stdout = sys.stdout
         sys.stdout = r
 
+    def updateRegexs(self):
+        if(self.changingDownloadTypes):
+            return
+        title = self.txtRTitle.text()
+        pages = self.txtRPages.text()
+        t = ''
+        if self.rbtnTypeNormal.isChecked():
+            t = 'normal'
+        elif self.rbtnTypeMovie.isChecked():
+            t = 'movie'
+        else:
+            t = 'custom'
+        self.config[t]["title"] = title
+        self.config[t]["pages"] = pages
+        self.saveConfig()
+
+    def downloadTypeChanged(self):
+        self.changingDownloadTypes = True
+        t = ''
+        if self.rbtnTypeNormal.isChecked():
+            t = 'normal'
+        elif self.rbtnTypeMovie.isChecked():
+            t = 'movie'
+        else:
+            t = 'custom'
+
+        self.txtRTitle.setText(self.config[t]["title"])
+        self.txtRPages.setText(self.config[t]["pages"])
+        self.changingDownloadTypes = False
+
+    def saveConfig(self):
+        Config.save(self.config)
+
     def setupEvents(self):
         self.btnBrowseXmlOutput.clicked.connect(self.btnBrowseXmlOutputClicked)
         self.btnBrowseConvertInput.clicked.connect(
@@ -246,6 +253,11 @@ class Application(Ui_MainWindow):
         self.lvwConvertInput.selectionModel().selectionChanged.connect(
             self.lvwConvertInputSelectionChanged)
         self.btnOpenFolder.clicked.connect(self.btnOpenFolderClicked)
+        self.txtRTitle.textChanged.connect(self.updateRegexs)
+        self.rbtnTypeCustom.clicked.connect(self.downloadTypeChanged)
+        self.rbtnTypeMovie.clicked.connect(self.downloadTypeChanged)
+        self.rbtnTypeNormal.clicked.connect(self.downloadTypeChanged)
+        self.txtFormat.textChanged.connect(self.saveConfig)
 
 
 class Redirect:
